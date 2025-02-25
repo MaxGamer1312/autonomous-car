@@ -4,5 +4,9 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Tommy/Scenes/DriveToTarget.unity
+    guid: 41f3bb189c0224488bc8d3419167a2ce
   m_configObjects: {}
+  m_UseUCBPForAssetBundles: 0
