@@ -54,7 +54,7 @@ public class CarController : Drivable
             {
                 // Apply brakes when reversing direction
                 wheel.wheelCollider.motorTorque = 0f;
-                wheel.wheelCollider.brakeTorque = Mathf.Abs(inputTurn) * brakeTorque;
+                wheel.wheelCollider.brakeTorque = Mathf.Abs(inputDrive) * brakeTorque;
             }
 
             wheel.wheelCollider.GetWorldPose(out Vector3 position, out Quaternion rotation);

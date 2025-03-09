@@ -13,13 +13,14 @@ public class DriveToTarget : Agent
 
     // giving score based on distance to goal
     
+    // private float timer;
     public override void OnEpisodeBegin()
     {
-        timer = 0;
+        //timer = 0;
         float x = UnityEngine.Random.Range(-22f, 22f);
         float z = UnityEngine.Random.Range(-22f, 22f);
         transform.localPosition = new Vector3(x, 1.5f, z);
-        originalDistance = (target.transform.position - transform.position).magnitude;
+        //originalDistance = (target.transform.position - transform.position).magnitude;
         x = UnityEngine.Random.Range(-22f, 22f);
         z = UnityEngine.Random.Range(-22f, 22f);
         target.transform.localPosition = new Vector3(x, 1, z);
@@ -47,8 +48,8 @@ public class DriveToTarget : Agent
         sensor.AddObservation(car.forwardSpeed);
     }
 
-    private float timer;
-    private float originalDistance;
+    
+    //private float originalDistance;
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
         // timer += Time.deltaTime;
