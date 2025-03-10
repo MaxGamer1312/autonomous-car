@@ -20,6 +20,7 @@ public class CarController : Drivable
     }
 
     public float forwardSpeed = 0;
+    public float steeringAngle = 0;
     public override void Drive(float inputDrive, float inputTurn)
     {
         forwardSpeed = Vector3.Dot(transform.forward, rb.linearVelocity);
@@ -37,6 +38,7 @@ public class CarController : Drivable
             if (wheel.steerable)
             {
                 wheel.wheelCollider.steerAngle = inputTurn * currentSteerRange;
+                steeringAngle = wheel.wheelCollider.steerAngle;
             }
 
             if (isAccelerating)
