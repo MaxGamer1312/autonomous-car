@@ -1,110 +1,144 @@
 using System;
+using System.Collections.Generic;
+using UnityEngine;
+
 
 namespace Tommy.Scripts.Classical_Algorithm
 {
-    public class Heap<T> where T : IHeapItem<T>
+    /// <summary>
+    /// This is a min heap:
+    ///     Enqueue(T item) // insert object into heap
+    ///     Peek() // returns top element
+    ///     Dequeue() // returns and remove top element
+    ///     IsEmpty() // returns bool
+    /// </summary>
+    /// <typeparam name="T">A comparable type to sort by.</typeparam>
+    public class Heap<T> where T : IHeapElement<T> 
     {
-        private T[] items;
+        public T[] heap;
+        private int size;
+        private Dictionary<T, T> hashTable;
 
-        public Heap(int maxHeapSize)
+        public Heap() : this(8) { }
+
+        public Heap(int capacity)
         {
-            items = new T[maxHeapSize];
+            heap = new T[capacity];
+            hashTable = new();
+            size = 0;
         }
 
-        public int Count { get; private set; }
-
-        public void Add(T item)
+        public void Enqueue(T item)
         {
-            if (Count >= items.Length - 1)
+            if(size >= heap.Length - 1)
+                Array.Resize<T>(ref heap, heap.Length * 2);
+
+            if (hashTable.TryGetValue(item, out T oldItem))
             {
-                T[] newArr = new T[items.Length * 2];
-                for (int i = 0; i < items.Length; i++)
+                if (item.CompareTo(oldItem) < 0)
                 {
-                    newArr[i] = items[i];
-                }
-                items = newArr;
-            }
-            item.HeapIndex = Count;
-            items[Count] = item;
-            SortUp(item);
-            Count++;
-        }
-
-        public T RemoveFirst()
-        {
-            var firstItem = items[0];
-            Count--;
-            items[0] = items[Count];
-            items[0].HeapIndex = 0;
-            SortDown(items[0]);
-            return firstItem;
-        }
-
-        public void UpdateItem(T item)
-        {
-            SortUp(item);
-        }
-
-        public bool Contains(T item)
-        {
-            return Equals(items[item.HeapIndex], item);
-        }
-
-        private void SortDown(T item)
-        {
-            while (true)
-            {
-                var childIndexLeft = item.HeapIndex * 2 + 1;
-                var childIndexRight = item.HeapIndex * 2 + 2;
-                var swapIndex = 0;
-
-                if (childIndexLeft < Count)
-                {
-                    swapIndex = childIndexLeft;
-
-                    if (childIndexRight < Count)
-                        if (items[childIndexLeft].CompareTo(items[childIndexRight]) < 0)
-                            swapIndex = childIndexRight;
-
-                    if (item.CompareTo(items[swapIndex]) < 0)
-                        Swap(item, items[swapIndex]);
-                    else
-                        return;
+                    // new item has a lower score
+                    // must remove old item
+                    RemoveElementAtIndex(oldItem.HeapIndex);
+                    hashTable.Remove(item);
                 }
                 else
                 {
                     return;
                 }
             }
+            
+            int indexToPlace = size;
+            while (indexToPlace > 0 && item.CompareTo(heap[GetParentIndex(indexToPlace)]) < 0)
+            {
+                heap[indexToPlace] = heap[GetParentIndex(indexToPlace)];
+                heap[indexToPlace].HeapIndex = indexToPlace;
+                indexToPlace = GetParentIndex(indexToPlace);
+            }
+            heap[indexToPlace] = item;
+            heap[indexToPlace].HeapIndex = indexToPlace;
+            int GetParentIndex(int i) => (i - 1) / 2;
+            size++;
+            hashTable.Add(item, item);
+        }
+        
+        public T Peek()
+        {
+            if (size == 0)
+            {
+                Debug.LogError("Heap Empty");
+                return default;
+            }
+                
+            return heap[0];
         }
 
-        private void SortUp(T item)
+        public T Dequeue() => RemoveElementAtIndex(0);
+        
+        
+        private T RemoveElementAtIndex(int index)
         {
-            var parentIndex = (item.HeapIndex - 1) / 2;
-
-            while (true)
+            if (size == 0)
             {
-                var parentItem = items[parentIndex];
-                if (item.CompareTo(parentItem) > 0)
-                    Swap(item, parentItem);
-                else
-                    break;
+                Debug.LogError("Heap Empty");
+                return default;
+            }
+        
+            // Save the top element, which is the smallest element in a min heap
+            T top = heap[index];
+            top.HeapIndex = -1;
 
-                parentIndex = (item.HeapIndex - 1) / 2;
+            // Move the last element to the root
+            heap[index] = heap[size - 1];
+            heap[index].HeapIndex = index;
+            heap[size - 1] = default;  // Clear the last position (optional)
+            size--;  // Decrease size of heap
+
+            // Variables to manage the hole (current index to fix)
+            int hole = index;
+
+            // Keep processing the heap until the property is restored
+            while (GetLeftChildIndex(hole) < size)
+            {
+                // Get left and right child indices
+                int leftChildIndex = GetLeftChildIndex(hole);
+                int rightChildIndex = GetRightChildIndex(hole);
+
+                // Determine which child is smaller (handle cases where there's no right child)
+                int smallerChild = leftChildIndex;
+
+                if (rightChildIndex < size && heap[rightChildIndex].CompareTo(heap[leftChildIndex]) < 0)
+                {
+                    smallerChild = rightChildIndex; // Right child is smaller
+                }
+
+                // If the current element is smaller than both children, stop
+                if (heap[hole].CompareTo(heap[smallerChild]) <= 0)
+                {
+                    break;
+                }
+
+                // Swap the current element with the smallest child
+                Swap(hole, smallerChild);
+                hole = smallerChild;  // Move the hole to the child's position
+            }
+
+            return top;
+            int GetLeftChildIndex(int i) => 2 * i + 1;
+            int GetRightChildIndex(int i) => 2 * i + 2;
+
+            void Swap(int i, int j)
+            {
+                (heap[i], heap[j]) = (heap[j], heap[i]);
+                heap[i].HeapIndex = i;
+                heap[j].HeapIndex = j;
             }
         }
 
-        private void Swap(T itemA, T itemB)
-        {
-            items[itemA.HeapIndex] = itemB;
-            items[itemB.HeapIndex] = itemA;
-            var itemAIndex = itemA.HeapIndex;
-            itemA.HeapIndex = itemB.HeapIndex;
-            itemB.HeapIndex = itemAIndex;
-        }
+        public bool IsEmpty() => size == 0;
     }
 
-    public interface IHeapItem<T> : IComparable<T>
+    public interface IHeapElement<T> : IComparable<T>
     {
         int HeapIndex { get; set; }
     }

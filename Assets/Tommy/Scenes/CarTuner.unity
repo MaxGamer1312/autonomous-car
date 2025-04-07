@@ -550,9 +550,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 859089015}
   distance: {x: 0, y: 1.78, z: -5.16}
-  rotationSpeed: 19.54
+  rotationSpeed: 116.5
   linearSmoothing: 0.25
-  maxSpeed: 20
+  maxSpeed: 1000
   rotationSmoothing: 30
 --- !u!1 &802094490
 GameObject:

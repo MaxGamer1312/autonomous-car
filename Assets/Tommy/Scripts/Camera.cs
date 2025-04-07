@@ -6,7 +6,8 @@ using Vector3 = UnityEngine.Vector3;
 
 public class Camera : MonoBehaviour
 {
-    [SerializeField] private Transform target;
+    private Transform[] targets;
+    private int targetIndex = 0;
     [SerializeField] private Vector3 distance;
     [SerializeField] private float rotationSpeed;
     [SerializeField] private float linearSmoothing;
@@ -20,6 +21,7 @@ public class Camera : MonoBehaviour
     
     void Start()
     {
+        targets = Array.ConvertAll(FindObjectsByType<CarController>(FindObjectsSortMode.None), (a) => a.transform);
         originalPosition = transform.position;
         originalRotation = transform.rotation;
     }
@@ -40,16 +42,24 @@ public class Camera : MonoBehaviour
 
     void LateUpdate()
     {
-        if(shouldFollow) FollowTarget();
+        if (shouldFollow)
+        {
+            if (Input.GetKeyDown(KeyCode.RightArrow)) 
+                targetIndex = (targetIndex + 1) % targets.Length;
+            if (Input.GetKeyUp(KeyCode.LeftArrow)) 
+                targetIndex = Math.Abs((targetIndex - 1) % targets.Length);
+            FollowTarget();
+        }
     }
 
     void FollowTarget()
     {
-        Vector3 targetVector =  target.position + target.rotation * distance;
+        
+        Vector3 targetVector =  targets[targetIndex].position + targets[targetIndex].rotation * distance;
         transform.position = Vector3.SmoothDamp(transform.position, targetVector, ref velocity, linearSmoothing, maxSpeed);
         
         // Determine which direction to rotate towards
-        Vector3 targetDirection = target.position - transform.position;
+        Vector3 targetDirection = targets[targetIndex].position - transform.position;
         
         // The step size is equal to speed times frame time.
         float singleStep = rotationSpeed * Time.deltaTime;
