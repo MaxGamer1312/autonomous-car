@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Goal
   - Death
+  - Car
   layers:
   - Default
   - TransparentFX
