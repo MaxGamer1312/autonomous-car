@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace Tommy.Scripts.Classical_Algorithm
@@ -13,12 +14,31 @@ namespace Tommy.Scripts.Classical_Algorithm
 
         public bool[,] grid;
         private int prevWidth = 0;
+        private LayerMask layer;
         private void OnValidate()
         {
             if (prevWidth != boardWidth)
             {
                 grid = new bool[boardWidth, boardWidth];
                 prevWidth = boardWidth;
+                
+                
+                layer = LayerMask.GetMask("Road");
+                Bounds boundingBox = bounds.bounds;
+                tileWidth = boundingBox.extents.z * 2 / boardWidth;
+                
+                Vector3 min = boundingBox.min + new Vector3(tileWidth, 0, tileWidth) / 2;
+                for (int row = 0; row < grid.GetLength(0); row++)
+                {
+                    for (int col = 0; col < grid.GetLength(1); col++)
+                    {
+                        Vector3 position = min;
+                        position.y = 0.6f;
+                        position.x = position.x + tileWidth * row;
+                        position.z = position.z + tileWidth * col;
+                        grid[row, col] = Physics.Raycast(position, Vector3.down, 1, layer);
+                    }
+                }
             }
             
         }

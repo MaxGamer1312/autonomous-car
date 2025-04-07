@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 85707066}
   - component: {fileID: 85707065}
   - component: {fileID: 85707064}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -239,7 +239,7 @@ GameObject:
   - component: {fileID: 100845089}
   - component: {fileID: 100845088}
   - component: {fileID: 100845087}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -449,7 +449,7 @@ GameObject:
   - component: {fileID: 315791877}
   - component: {fileID: 315791876}
   - component: {fileID: 315791875}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -667,7 +667,7 @@ GameObject:
   - component: {fileID: 802094494}
   - component: {fileID: 802094493}
   - component: {fileID: 802094492}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -775,7 +775,7 @@ GameObject:
   - component: {fileID: 835456269}
   - component: {fileID: 835456268}
   - component: {fileID: 835456267}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -883,7 +883,7 @@ GameObject:
   - component: {fileID: 881233875}
   - component: {fileID: 881233874}
   - component: {fileID: 881233873}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -991,7 +991,7 @@ GameObject:
   - component: {fileID: 884675926}
   - component: {fileID: 884675925}
   - component: {fileID: 884675924}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1099,7 +1099,7 @@ GameObject:
   - component: {fileID: 979151527}
   - component: {fileID: 979151526}
   - component: {fileID: 979151525}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1207,7 +1207,7 @@ GameObject:
   - component: {fileID: 1008739595}
   - component: {fileID: 1008739594}
   - component: {fileID: 1008739593}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1315,7 +1315,7 @@ GameObject:
   - component: {fileID: 1012411839}
   - component: {fileID: 1012411838}
   - component: {fileID: 1012411837}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1570,8 +1570,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bounds: {fileID: 1296596912}
-  boardWidth: 5
-  tileWidth: 11
+  boardWidth: 19
+  tileWidth: 2.8947368
   debugMode: 1
 --- !u!65 &1296596912
 BoxCollider:
@@ -1606,7 +1606,7 @@ GameObject:
   - component: {fileID: 1445013827}
   - component: {fileID: 1445013826}
   - component: {fileID: 1445013825}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2070,7 +2070,7 @@ GameObject:
   - component: {fileID: 1569451414}
   - component: {fileID: 1569451413}
   - component: {fileID: 1569451412}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2178,7 +2178,7 @@ GameObject:
   - component: {fileID: 1584900040}
   - component: {fileID: 1584900039}
   - component: {fileID: 1584900038}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2321,7 +2321,7 @@ GameObject:
   - component: {fileID: 1788023945}
   - component: {fileID: 1788023944}
   - component: {fileID: 1788023943}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2426,7 +2426,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1796482786}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2567,7 +2567,7 @@ GameObject:
   - component: {fileID: 1820102139}
   - component: {fileID: 1820102138}
   - component: {fileID: 1820102137}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2672,7 +2672,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1847134940}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Roads
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2714,7 +2714,7 @@ GameObject:
   - component: {fileID: 2014968861}
   - component: {fileID: 2014968860}
   - component: {fileID: 2014968859}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3038,7 +3038,7 @@ GameObject:
   - component: {fileID: 2117798195}
   - component: {fileID: 2117798194}
   - component: {fileID: 2117798193}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3969,8 +3969,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8400259824664164153}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalRotation: {x: -0, y: 0.70586824, z: -0, w: 0.7083431}
+  m_LocalPosition: {x: 3.9, y: 1.5, z: -10.7}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3984,7 +3984,7 @@ Transform:
   - {fileID: 5730886001454485448}
   - {fileID: 6222086930414276675}
   m_Father: {fileID: 1296596910}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 89.799, z: 0}
 --- !u!33 &6912981501496911897
 MeshFilter:
   m_ObjectHideFlags: 0

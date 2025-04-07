@@ -13,9 +13,11 @@ namespace Tommy.Scripts.Classical_Algorithm
         public RawImage debugImage;
         public Map map;
         private HybridAstar hybridAstar;
+
+        private Pose2D startPosition;
         void Start()
         {
-            
+            startPosition = new Pose2D(transform.position.x, transform.position.z, transform.eulerAngles.y * Mathf.Deg2Rad);
             hybridAstar = new HybridAstar(map);
             
             
@@ -101,7 +103,7 @@ namespace Tommy.Scripts.Classical_Algorithm
 
         private void LateUpdate()
         {
-            List<State> path = hybridAstar.FindPath(new Pose2D(), new Pose2D(car.transform.position.x, car.transform.position.z, car.transform.eulerAngles.y * Mathf.Deg2Rad));
+            List<State> path = hybridAstar.FindPath(startPosition, new Pose2D(car.transform.position.x, car.transform.position.z, car.transform.eulerAngles.y * Mathf.Deg2Rad));
 
             if (path != null)
             {
