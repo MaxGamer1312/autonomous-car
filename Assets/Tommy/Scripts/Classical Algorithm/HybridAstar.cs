@@ -87,15 +87,15 @@ namespace Tommy.Scripts.Classical_Algorithm
             
             (float driveDistance, float turningAngle, float cost)[] actions =
             {
-                // (-maxSpeed, -steeringAngle, .2f),
-                // (-maxSpeed, 0, .1f),
-                // (-maxSpeed, steeringAngle, .2f),
-                (-maxSpeed, -steeringAngle, .02f),
-                (-maxSpeed, 0, .0f),
-                (-maxSpeed, steeringAngle, .02f),
-                (maxSpeed, -steeringAngle, .02f),
-                (maxSpeed, 0,  0f),
-                (maxSpeed, steeringAngle, .02f),
+                (-maxSpeed, -steeringAngle * .25f, 2f),
+                (-maxSpeed, 0, .5f),
+                (-maxSpeed, steeringAngle * .25f, 2f),
+                // (-maxSpeed, -steeringAngle, .02f),
+                // (-maxSpeed, 0, .0f),
+                // (-maxSpeed, steeringAngle, .02f),
+                (maxSpeed, -steeringAngle * .25f, 1f),
+                (maxSpeed, 0, 0f),
+                (maxSpeed, steeringAngle * .25f, 1f),
             };
             State[] result = new State[actions.Length];
             for (int i = 0; i < result.Length; i++)
@@ -136,7 +136,7 @@ namespace Tommy.Scripts.Classical_Algorithm
                 result[i] = new State()
                 {
                     pose = resultingPose,
-                    gCost = parent.gCost + actions[i].cost + (map.WorldToCell(resultingPose.x, resultingPose.y) ? 0 : 10000),
+                    gCost = parent.gCost + actions[i].cost + (map.WorldToCell(resultingPose.x, resultingPose.y) ? 0 : 10),
                     hCost = resultingPose.DistanceTo(endPose),
                     parent = parent,
                     isReversing = actions[i].driveDistance < 0

@@ -79,8 +79,8 @@ namespace Tommy.Scripts.Training
             drawingColor = new Color(Random.value, Random.value, Random.value);
             #endif
             
-            //HalfGridWorld();
-            FullGridWorld();
+            HalfGridWorld();
+            //FullGridWorld();
             
 
             
