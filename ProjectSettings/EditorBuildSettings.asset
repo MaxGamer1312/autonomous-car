@@ -6,16 +6,16 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/Tommy/Scenes/DriveToTarget.unity
+    path: Assets/Extra/DriveToTarget.unity
     guid: 41f3bb189c0224488bc8d3419167a2ce
   - enabled: 0
     path: Assets/Tommy 1/Scenes/DriveToTarget.unity
     guid: e1333364d42b6344aacb68a049cedb49
   - enabled: 0
-    path: Assets/Tommy/Scenes/CrunchDay.unity
+    path: Assets/Extra/CrunchDay.unity
     guid: 4a0f957e712fd46aeae525784d6bc313
   - enabled: 1
-    path: Assets/Tommy/Scenes/CrunchRaycast.unity
+    path: Assets/Extra/CrunchRaycast.unity
     guid: 1dacf27021aaf40ddb79d89053ce3a78
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
