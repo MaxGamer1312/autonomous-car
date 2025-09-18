@@ -14,8 +14,11 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Extra/CrunchDay.unity
     guid: 4a0f957e712fd46aeae525784d6bc313
-  - enabled: 1
+  - enabled: 0
     path: Assets/Extra/CrunchRaycast.unity
     guid: 1dacf27021aaf40ddb79d89053ce3a78
+  - enabled: 1
+    path: Assets/Scenes/carTrain.unity
+    guid: fbd02dc4ea54f41188f87945a77fc416
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

@@ -356,6 +356,30 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5489834120087975601, guid: e916526d417654d839fc4316b49b032d, type: 3}
+      propertyPath: source
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5489834120087975601, guid: e916526d417654d839fc4316b49b032d, type: 3}
+      propertyPath: stride
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5489834120087975601, guid: e916526d417654d839fc4316b49b032d, type: 3}
+      propertyPath: cubeSize
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5489834120087975601, guid: e916526d417654d839fc4316b49b032d, type: 3}
+      propertyPath: rgbCutoff
+      value: 0.184
+      objectReference: {fileID: 0}
+    - target: {fileID: 5489834120087975601, guid: e916526d417654d839fc4316b49b032d, type: 3}
+      propertyPath: continuous
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5489834120087975601, guid: e916526d417654d839fc4316b49b032d, type: 3}
+      propertyPath: roadThreshold
+      value: 0.443
+      objectReference: {fileID: 0}
     - target: {fileID: 7062675555761316270, guid: e916526d417654d839fc4316b49b032d, type: 3}
       propertyPath: m_Name
       value: MapGeneration

@@ -2,6 +2,7 @@
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
+
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -60,6 +61,9 @@ sysinfo.txt
 *.aab
 *.unitypackage
 *.app
+*.x86_64
+*_Data/
+*_s.debug
 
 # Crashlytics generated file
 crashlytics-build.properties
@@ -71,10 +75,25 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
+# Python venv for ML-Agents
 /venv
 
+# Training / results
 /results
 
-.DS_STORE
+# Unity ML-Agents timer and debug artifacts
+/[Aa]ssets/ML-Agents/Timers/*.json
+/[Aa]ssets/ML-Agents/Timers/*.json.meta
 
+# Old test builds and crash logs
+/UnityPlayer.so
+/UnityPlayer_s.debug
+/libdecor-0.so.0
+/libdecor-cairo.so
+/mono_crash.*.json
+
+# Mac system files
+.DS_Store
+
+# JetBrains / Rider / IDE config
 .idea/

@@ -11,47 +11,59 @@ namespace Tommy.Scripts.Training
 {
     public class CarDriver : Agent
     {
-        public float groundTimer;
-        private float groundPenalty = 0;
-        public float timer;
-        private float timerPenalty = 0;
         private Vector3 target;
 
         [SerializeField] private CarController car;
 
+        [Header("Rewards")]
+        [SerializeField] private float goalReward = 1f;
+        [SerializeField] private float deathPenalty = -1f;
+        
+        private float stepPenalty; 
+
         private Color drawingColor;
         public LayerMask ground;
-        private Vector3 startPosition;
-        private Quaternion startRotation;
 
         private LineRenderer line;
 
-        private int retry = 0;
 
         [Header("Goal & Roads")]
         public Transform goal;
         [SerializeField] private Transform parentRoads;   
         private Vector3[][] possibleLocations;
 
+        //happens when you start the game
         public override void Initialize()
         {
+            //Line between agent and target
             line = GetComponent<LineRenderer>();
             if (line != null) line.positionCount = 2;
 
-            startPosition = transform.position;
-            startRotation = transform.rotation;
+            //Punishment every tick in which when the episode ends 
+            // it will equal the death penalty
+            if (MaxStep > 0)
+                stepPenalty = deathPenalty / MaxStep;
+            else
+                stepPenalty = 0f;
 
+            //Makes a list of possible regions where the 
+            //car and target can spawn
             BuildPossibleLocations();
         }
 
+        //triggers every episode
         public override void OnEpisodeBegin()
         {
             if (parentRoads != null && possibleLocations != null)
             {
+                //Random spawn on roads
                 RandomLocation(transform);
                 if (goal != null) RandomLocation(goal);
-
+                
+                //Rigidbody allows Gravity, forces, velocity to 
+                //affect the agent
                 var rb = GetComponent<Rigidbody>();
+                //Stop the car from moving everytime the next episode start
                 if (rb != null)
                 {
 #if UNITY_6000_0_OR_NEWER
@@ -67,36 +79,53 @@ namespace Tommy.Scripts.Training
         public override void CollectObservations(VectorSensor sensor)
         {
             Vector3 aToB = target - transform.position;
+            //ignore height for now
             aToB.y = 0;
-
+            //forward and right are direction towards certain axis'
+            //for example if transform.forward = (1,0,0)/(x,y,z) then it is
+            //facing towards the x axis
             Vector3 forward = transform.forward;
             Vector3 right = transform.right;
-            forward.y = 0; right.y = 0;
-            forward.Normalize(); right.Normalize();
+            //ignore height for now
+            forward.y = 0;
+            right.y = 0;
 
+            //Turns them into unit vectors
+            forward.Normalize();
+            right.Normalize();
+            //instead of being towards the axis',
+            //it is now using the target as reference
             float localX = Vector3.Dot(aToB, right); 
             float localY = Vector3.Dot(aToB, forward);
 
             Vector2 localVector = new Vector2(localX, localY);
             sensor.AddObservation(localVector);
+            //add speed relative to its max speed
             sensor.AddObservation(car.forwardSpeed / car.maxSpeed);
         }
 
-        private float maxDist = 0;
-        private float maxHeading = 0;
-
+        //triggers every step
         public override void OnActionReceived(ActionBuffers actionBuffers)
         {
+            //change to goal's position if it exists
+            //if not then keep current position for target
             target = goal != null ? goal.position : target;
 
+            //lineRenderer
             if (line != null)
             {
                 line.SetPosition(0, transform.position);
                 line.SetPosition(1, target);
             }
+            
+            if (stepPenalty != 0f)
+                AddReward(stepPenalty);
 
+            //Actions the car is taking based on observation
             float inputPower = actionBuffers.ContinuousActions[0];
             float inputSteeringAngle = actionBuffers.ContinuousActions[1];
+
+            //Uses car script and inputs to drive car
             car.Drive(inputPower, inputSteeringAngle);
         }
 
@@ -107,6 +136,22 @@ namespace Tommy.Scripts.Training
             continuousActionsOut[1] = Input.GetAxis("Horizontal");
         }
 
+        //triggers Everytime car collides 
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.CompareTag("Death"))
+            {
+                SetReward(deathPenalty);
+                EndEpisode();
+            }
+            else if (other.CompareTag("Goal"))
+            {
+                AddReward(goalReward);
+                EndEpisode();
+            }
+        }
+
+        //ignore
 #if (UNITY_EDITOR && VISUALIZE)
         private void OnDrawGizmos()
         {
@@ -115,23 +160,7 @@ namespace Tommy.Scripts.Training
             Gizmos.DrawLine(transform.position, target);
         }
 #endif
-
-        private void OnTriggerEnter(Collider other)
-        {
-            if (other.CompareTag("Death"))
-            {
-                AddReward(-1f);
-                EndEpisode();
-            }
-            if (other.CompareTag("Goal"))
-            {
-                Debug.Log("GOAL");
-                AddReward(1f);
-                EndEpisode();
-            }
-        }
-
-
+        //ignore
         private void BuildPossibleLocations()
         {
             if (parentRoads == null) return;
@@ -197,7 +226,7 @@ namespace Tommy.Scripts.Training
                 possibleLocations[i] = new Vector3[2] { pA, pB };
             }
         }
-
+        //ignore
         private void RandomLocation(Transform obj)
         {
             if (parentRoads == null || possibleLocations == null || parentRoads.childCount == 0) return;

@@ -482,7 +482,7 @@ GameObject:
   - component: {fileID: 354483490781268976}
   m_Layer: 6
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -591,7 +591,7 @@ GameObject:
   - component: {fileID: 6783656192819134620}
   m_Layer: 6
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -700,7 +700,7 @@ GameObject:
   - component: {fileID: 5307986942026458423}
   m_Layer: 6
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -952,7 +952,7 @@ GameObject:
   - component: {fileID: 4829834293833746062}
   m_Layer: 6
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1169,7 +1169,7 @@ GameObject:
   - component: {fileID: 8084438305855078012}
   m_Layer: 6
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1278,7 +1278,7 @@ GameObject:
   - component: {fileID: 753713692205000149}
   m_Layer: 6
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1387,7 +1387,7 @@ GameObject:
   - component: {fileID: 5587740051160552332}
   m_Layer: 6
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1604,7 +1604,7 @@ GameObject:
   - component: {fileID: 5099773002811246196}
   m_Layer: 6
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1713,7 +1713,7 @@ GameObject:
   - component: {fileID: 5161468246184911798}
   m_Layer: 6
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2402,7 +2402,7 @@ MonoBehaviour:
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 5022602860645237092, guid: c4c247699d0184d7abf85a1c91efdad8, type: 3}
   m_InferenceDevice: 0
-  m_BehaviorType: 2
+  m_BehaviorType: 0
   m_BehaviorName: LocalCameraRNNBrain
   TeamId: 0
   m_UseChildSensors: 1
@@ -2424,10 +2424,10 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 0
-  groundTimer: 2
-  timer: 0
+  MaxStep: 1000
   car: {fileID: 1690327015522297909}
+  goalReward: 1
+  deathPenalty: -1
   ground:
     serializedVersion: 2
     m_Bits: 64
