@@ -1,0 +1,33 @@
+behaviors:
+  CarDriver:                      # must match your Behavior Name
+    trainer_type: ppo
+    max_steps: 50000000
+    time_horizon: 128
+    summary_freq: 10000
+
+    hyperparameters:
+      batch_size: 1024
+      buffer_size: 40960
+      learning_rate: 3.0e-4
+      beta: 1.0e-3
+      epsilon: 0.2
+      lambd: 0.95
+      num_epoch: 3
+
+    network_settings:
+      normalize: true
+      hidden_units: 256
+      num_layers: 2
+
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+
+    behavioral_cloning:           # <-- NOT in reward_signals
+      demo_path: "/Users/victor/githubProjects/autonomous-car/demos/demoSP_0.demo"   # add more files as needed
+      strength: 0.5               # how strongly to imitate (0–1+)
+      steps: 300000               # how long to keep BC on (then it stops)
+      batch_size: 512
+      num_epoch: 3
+      samples_per_update: 0       # 0 = use full demo each update
