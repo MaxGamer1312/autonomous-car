@@ -8,6 +8,7 @@ TagManager:
   - Death
   - Car
   - Ground
+  - Parking
   layers:
   - Default
   - TransparentFX

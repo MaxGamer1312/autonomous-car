@@ -25,9 +25,9 @@ behaviors:
         strength: 1.0
 
     behavioral_cloning:           # <-- NOT in reward_signals
-      demo_path: "/Users/victor/githubProjects/autonomous-car/demos/demoSP_0.demo"   # add more files as needed
+      demo_path: "/Users/victor/githubProjects/autonomous-car/demos/demoSPNew.demo"   # add more files as needed
       strength: 0.5               # how strongly to imitate (0–1+)
-      steps: 300000               # how long to keep BC on (then it stops)
+      steps: 1000000               # how long to keep BC on (then it stops)
       batch_size: 512
       num_epoch: 3
       samples_per_update: 0       # 0 = use full demo each update
