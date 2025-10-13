@@ -73,9 +73,11 @@ class CarController:
         self.pi.stop()
         
 drive_pin=12 # pin for the motor contolling wheels
+direction_pin=13 # pin for the direction of the motor. not sure if needed.
 turn_pin=18 # pin for the servo
+
 command=""  
-car= CarController(drive_pin, turn_pin)
+car= CarController(drive_pin, direction_pin, turn_pin)
 while True :
     print("""Current commands : 
           1. turn
