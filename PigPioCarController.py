@@ -9,13 +9,14 @@ SERVO_CENTER=1500
 
 class CarController:
     def __init__(self, drive_pin, direction_pin, turn_pin, ip= None, duty_cycle=0, min_mod=0, max_mod=255):
-        if isinstance(ip, str):
-            self.pi = pigpio.pi(ip)  # Connect to remote Pi
-        else:
-            self.pi = pigpio.pi()    # Connect locally
+        #if isinstance(ip, str):
+        self.pi = pigpio.pi(ip)  # Connect to remote Pi
+        #else:
+#            self.pi = pigpio.pi()    # Connect locally
 
         if not self.pi.connected:
             raise ConnectionError("Could not connect to pigpio daemon.")
+
         self.drive_pin = drive_pin
         self.direction_pin = direction_pin
         self.turn_pin = turn_pin
@@ -76,8 +77,12 @@ drive_pin=11 # pin for the motor contolling wheels
 direction_pin=13 # pin for the direction of the motor. not sure if needed.
 turn_pin=40 # pin for the servo
 
-command=""  
-car= CarController(drive_pin, direction_pin, turn_pin)
+command="" 
+#if input("ip?")[0]== "Y": 
+ip = input("Enter ip here : ")
+car= CarController(drive_pin, direction_pin, turn_pin,ip)
+#else :
+ #   car= CarController(drive_pin, direction_pin, turn_pin)
 while True :
     print("""Current commands : 
           1. turn
