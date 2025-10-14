@@ -71,10 +71,10 @@ class CarController:
     def end_connection(self):
         self.stop(self)
         self.pi.stop()
-        
-drive_pin=12 # pin for the motor contolling wheels
+        #11 13 16 18 all seem to connect to the motor. Unsure which is direction, and which is drive.
+drive_pin=11 # pin for the motor contolling wheels
 direction_pin=13 # pin for the direction of the motor. not sure if needed.
-turn_pin=18 # pin for the servo
+turn_pin=40 # pin for the servo
 
 command=""  
 car= CarController(drive_pin, direction_pin, turn_pin)
