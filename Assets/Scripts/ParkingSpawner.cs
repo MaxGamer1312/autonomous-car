@@ -6,10 +6,14 @@ namespace Tommy.Scripts.Training
     public class ParkingSpawner
     {
         private readonly List<Transform> spots = new List<Transform>();
+        private readonly List<Renderer> goalNodes = new List<Renderer>();
+        private Color defaultColor = Color.white;
+        private Renderer currentGoalRenderer = null;
 
         public ParkingSpawner(Transform parent = null)
         {
             Refresh(parent);
+            InitializeGoalNodes();
         }
 
         public void Refresh(Transform parent = null)
@@ -29,6 +33,40 @@ namespace Tommy.Scripts.Training
                 foreach (var go in GameObject.FindGameObjectsWithTag("Parking"))
                     spots.Add(go.transform);
             }
+            InitializeGoalNodes();
+        }
+
+        private void InitializeGoalNodes()
+        {
+            goalNodes.Clear();
+            var nodes = GameObject.FindGameObjectsWithTag("Parking Node");
+            foreach (var node in nodes)
+            {
+                var rend = node.GetComponent<Renderer>();
+                if (rend != null)
+                {
+                    goalNodes.Add(rend);
+                }
+            }
+            if (goalNodes.Count > 0)
+            {
+                defaultColor = goalNodes[0].material.color;
+            }
+        }
+
+        public void SetRandomGoalNode()
+        {
+            if (goalNodes.Count == 0) return;
+
+            // Reset previous goal node color
+            if (currentGoalRenderer != null)
+            {
+                currentGoalRenderer.material.color = defaultColor;
+            }
+
+            int idx = Random.Range(0, goalNodes.Count);
+            currentGoalRenderer = goalNodes[idx];
+            currentGoalRenderer.material.color = Color.green;
         }
 
         public bool RandomLocation(Transform target, float surfaceYOffset = 0.1f, bool alignUpright = true)

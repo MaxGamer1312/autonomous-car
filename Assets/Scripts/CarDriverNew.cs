@@ -5,19 +5,25 @@ using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace Tommy.Scripts.Training
 {
     public class CarDriverNew : Agent
     {
         private Vector3 target;
+        private PathFinding pathFinder;
 
         [SerializeField] private CarController car;
+
+        [Header("Observations")]
+        [Tooltip("Number of upcoming nodes to include in observations as (angle, distance) pairs.")]
+        [SerializeField] private int lookaheadNodes = 3;
 
         [Header("Rewards")]
         [SerializeField] private float goalReward = 1f;
         [SerializeField] private float deathPenalty = -1f;
+        [SerializeField] private float immediateValue = 0.1f;   // reward when hitting the correct next node
+        [SerializeField] private float progressNode = 0.3f;     // total shaping reward per segment
 
         [Header("Anti-Stall")]
         [SerializeField] private float stillPenalty = -0.001f;
@@ -28,16 +34,22 @@ namespace Tommy.Scripts.Training
         private Vector3 _prevPos;
         private float stepPenalty;
 
-        private Color drawingColor;
         public LayerMask ground;
         private LineRenderer line;
-
         private ParkingSpawner parkingSpawner;
 
         [Header("Goal & Parking")]
-        public Transform goal;
-        private Transform parentParking; 
+        private Transform goal; // not moved; goal node is chosen by tag
+        [SerializeField] private Color goalNodeColor = Color.green;
+        private Transform _goalNode;
+        private Renderer _goalNodeRenderer;
+        private Color _goalNodeOriginalColor;
+
         [SerializeField] private bool debug;
+        [SerializeField] private bool debugRewards;
+
+        // Progressive shaping state (0..1). Reset each time a segment completes.
+        private float _lastProgressFrac = 0f;
 
         public override void Initialize()
         {
@@ -45,26 +57,28 @@ namespace Tommy.Scripts.Training
             if (line != null) line.positionCount = 2;
 
             stepPenalty = (MaxStep > 0) ? deathPenalty / MaxStep : 0f;
-
-            // Set up the parking spawner (parent optional)
             parkingSpawner = new ParkingSpawner();
+
+            pathFinder = GetComponent<PathFinding>();
+            if (pathFinder == null)
+                pathFinder = gameObject.AddComponent<PathFinding>();
         }
 
         public override void OnEpisodeBegin()
         {
             if (parkingSpawner == null) return;
 
-            // Re-scan parking spots (works even without a parent)
+            pathFinder?.ResetPathState();
+
             parkingSpawner.Refresh();
-
-            // Spawn agent and goal on random parking spots
             parkingSpawner.RandomLocation(transform, 0.5f, true);
-            if (goal != null)
-                parkingSpawner.RandomLocation(goal, 0.5f, true);
 
-            target = goal != null ? goal.position : transform.position;
+            SelectRandomGoalNode(transform);
+            target = _goalNode != null ? _goalNode.position : transform.position;
 
-            // Reset physics
+            if (pathFinder != null && _goalNode != null)
+                pathFinder.ForceRecomputeNow(transform, _goalNode);
+
             var rb = GetComponent<Rigidbody>();
             if (rb != null)
             {
@@ -78,128 +92,253 @@ namespace Tommy.Scripts.Training
 
             _prevPos = transform.position;
             _stallCounter = 0;
+            _lastProgressFrac = 0f;
         }
 
         public override void CollectObservations(VectorSensor sensor)
         {
-            // Direction to target in the agent's local frame (flattened)
-            Vector3 aToB = (goal != null ? goal.position : target) - transform.position;
-            aToB.y = 0f;
+            // (angle, distance) for the next 'lookaheadNodes' path nodes
+            var nodes = pathFinder?.GetNextKNodes(Mathf.Max(0, lookaheadNodes));
+            int emitted = 0;
 
-            Vector3 fwd = transform.forward; fwd.y = 0f; if (fwd.sqrMagnitude > 1e-6f) fwd.Normalize();
-            Vector3 right = transform.right;  right.y = 0f; if (right.sqrMagnitude > 1e-6f) right.Normalize();
+            if (nodes != null)
+            {
+                // flatten car forward
+                Vector3 fwd = transform.forward; fwd.y = 0f;
+                if (fwd.sqrMagnitude > 1e-6f) fwd.Normalize();
 
-            float localX = Vector3.Dot(aToB, right);
-            float localY = Vector3.Dot(aToB, fwd);
-            sensor.AddObservation(new Vector2(localX, localY));
+                foreach (var node in nodes)
+                {
+                    if (node == null) continue;
+                    Vector3 to = node.position - transform.position; to.y = 0f;
+                    float dist = to.magnitude;
 
-            // Normalized forward speed
-            float normSpeed = (car != null && car.maxSpeed > 1e-6f) ? (car.forwardSpeed / car.maxSpeed) : 0f;
+                    float ang = 0f;
+                    if (dist > 1e-6f && fwd.sqrMagnitude > 1e-6f)
+                    {
+                        Vector3 dir = to / dist;
+                        float dot = Mathf.Clamp(Vector3.Dot(fwd, dir), -1f, 1f);
+                        float crossY = Vector3.Cross(fwd, dir).y;
+                        ang = Mathf.Atan2(crossY, dot); // signed angle in radians (-pi..pi), left=+, right=-
+                    }
+
+                    sensor.AddObservation(ang);
+                    sensor.AddObservation(dist);
+                    emitted++;
+                    if (emitted >= lookaheadNodes) break;
+                }
+            }
+
+            // pad with zeros if fewer nodes
+            for (; emitted < lookaheadNodes; emitted++)
+            {
+                sensor.AddObservation(0f); // angle
+                sensor.AddObservation(0f); // distance
+            }
+
+            // Keep a simple motion cue (optional, not about the goal)
+            float normSpeed = (car != null && car.maxSpeed > 1e-6f)
+                ? (car.forwardSpeed / car.maxSpeed)
+                : 0f;
             sensor.AddObservation(normSpeed);
         }
 
         public override void OnActionReceived(ActionBuffers actionBuffers)
         {
-            // Keep target synced with goal
-            if (goal != null) target = goal.position;
+            if (_goalNode != null) target = _goalNode.position;
+            pathFinder?.UpdatePath(transform, _goalNode);
 
-            // Simple debug line to goal
-            if (line != null)
+            // Progressive shaping toward the next node (linear, only when making positive progress)
+            var nextNode = pathFinder?.GetNextNode();
+            var anchor   = pathFinder?.GetAnchorNode();
+            if (nextNode != null && anchor != null)
             {
-                if (debug)
+                float D0 = Vector3.Distance(anchor.position, nextNode.position);
+                if (D0 > 1e-4f)
                 {
-                    line.enabled = true;
-                    line.positionCount = 2;
-                    line.SetPosition(0, SurfaceSnap(transform.position));
-                    line.SetPosition(1, SurfaceSnap(target));
-                }
-                else
-                {
-                    line.enabled = false;
+                    float dNow = Vector3.Distance(transform.position, nextNode.position);
+                    float frac = Mathf.Clamp01(1f - (dNow / D0)); // 0 at anchor, 1 at next node
+                    float delta = Mathf.Max(0f, frac - _lastProgressFrac);
+
+                    if (delta > 0f && Math.Abs(progressNode) > 1e-8f)
+                    {
+                        float r = progressNode * delta;
+                        AddReward(r);
+                        if (debugRewards) Debug.Log($"Reward: {r:F4} - reason: progress ({frac:P0})");
+                        _lastProgressFrac = frac;
+                    }
                 }
             }
 
-            // Anti-stall shaping
+            // Stall shaping
             float speed;
             var rb = GetComponent<Rigidbody>();
-            if (rb != null)
-            {
 #if UNITY_6000_0_OR_NEWER
-                speed = rb.linearVelocity.magnitude;
+            speed = rb != null ? rb.linearVelocity.magnitude : (transform.position - _prevPos).magnitude / Time.fixedDeltaTime;
 #else
-                speed = rb.velocity.magnitude;
+            speed = rb != null ? rb.velocity.magnitude : (transform.position - _prevPos).magnitude / Time.fixedDeltaTime;
 #endif
-            }
-            else
-            {
-                speed = (transform.position - _prevPos).magnitude / Time.fixedDeltaTime;
-            }
 
             if (speed < stallSpeedThreshold)
             {
                 _stallCounter++;
-                if (stillPenalty != 0f) AddReward(stillPenalty);
+                if (stillPenalty != 0f)
+                {
+                    AddReward(stillPenalty);
+                    if (debugRewards) Debug.Log($"Reward: {stillPenalty} - reason: stall");
+                }
             }
-            else
-            {
-                _stallCounter = 0;
-            }
+            else _stallCounter = 0;
 
             if (_stallCounter >= stallTimeoutSteps)
             {
                 AddReward(deathPenalty * 0.25f);
+                if (debugRewards) Debug.Log($"Reward: {deathPenalty * 0.25f} - reason: stall timeout");
+                pathFinder?.ResetPathState();
                 EndEpisode();
                 return;
             }
 
             _prevPos = transform.position;
 
-            // Small step penalty
-            if (stepPenalty != 0f) AddReward(stepPenalty);
+            if (stepPenalty != 0f)
+            {
+                AddReward(stepPenalty);
+                if (debugRewards) Debug.Log($"Reward: {stepPenalty} - reason: step");
+            }
 
             // Apply actions
-            float inputPower = actionBuffers.ContinuousActions[0];
-            float inputSteeringAngle = actionBuffers.ContinuousActions[1];
-            car.Drive(inputPower, inputSteeringAngle);
-        }
-
-        public override void Heuristic(in ActionBuffers actionsOut)
-        {
-            var a = actionsOut.ContinuousActions;
-            a[0] = Input.GetAxis("Vertical");
-            a[1] = Input.GetAxis("Horizontal");
+            float inputPower    = actionBuffers.ContinuousActions[0];
+            float inputSteering = actionBuffers.ContinuousActions[1];
+            car.Drive(inputPower, inputSteering);
         }
 
         private void OnTriggerEnter(Collider other)
         {
             if (other.CompareTag("Death"))
             {
-                SetReward(deathPenalty);
+                AddReward(deathPenalty);
+                if (debugRewards) Debug.Log($"Reward: {deathPenalty} - reason: death");
+                pathFinder?.ResetPathState();
                 EndEpisode();
+                return;
             }
-            else if (other.CompareTag("Goal"))
+
+            int laneLayer = LayerMask.NameToLayer("LaneNode");
+            if (other.gameObject.layer == laneLayer)
             {
-                AddReward(goalReward);
-                EndEpisode();
+                if (_goalNode != null && SameNode(other.transform, _goalNode))
+                {
+                    // pay remaining shaping on the last leg, then goal bonus
+                    var next = pathFinder?.GetNextNode();
+                    var anchor = pathFinder?.GetAnchorNode();
+                    if (next != null && anchor != null)
+                    {
+                        float remaining = Mathf.Clamp01(1f - _lastProgressFrac);
+                        float r = progressNode * remaining;
+                        if (r > 0f) { AddReward(r); if (debugRewards) Debug.Log($"Reward: {r:F4} - reason: progress remainder at goal"); }
+                    }
+
+                    AddReward(goalReward);
+                    if (debugRewards) Debug.Log($"Reward: {goalReward} - reason: goal node");
+                    pathFinder?.ResetPathState();
+                    EndEpisode();
+                    return;
+                }
+
+                if (pathFinder != null)
+                {
+                    // Ignore only the episode's spawn node (neutral)
+                    if (pathFinder.IsEpisodeSpawnNode(other.transform))
+                        return;
+
+                    var expectedNext = pathFinder.GetNextNode();
+                    if (expectedNext != null && SameNode(other.transform, expectedNext))
+                    {
+                        // complete shaping for this leg
+                        float remain = Mathf.Clamp01(1f - _lastProgressFrac);
+                        float rProg = progressNode * remain;
+                        if (rProg > 0f) { AddReward(rProg); if (debugRewards) Debug.Log($"Reward: {rProg:F4} - reason: progress complete"); }
+
+                        // immediate hit
+                        AddReward(immediateValue);
+                        if (debugRewards) Debug.Log($"Reward: {immediateValue} - reason: correct node");
+
+                        // advance path & reset shaping for next segment
+                        pathFinder.AdvanceIfNodeReached(other.transform);
+                        _lastProgressFrac = 0f;
+                    }
+                    else
+                    {
+                        AddReward(-immediateValue);
+                        if (debugRewards) Debug.Log($"Reward: {-immediateValue} - reason: wrong node");
+                    }
+                }
             }
         }
 
-        private Vector3 SurfaceSnap(Vector3 p, float upOffset = 0.02f)
+        public override void Heuristic(in ActionBuffers actionsOut)
         {
-            Vector3 origin = p + Vector3.up * 5f;
-            if (Physics.Raycast(origin, Vector3.down, out var hit, 20f, ground, QueryTriggerInteraction.Ignore))
-                return hit.point + Vector3.up * upOffset;
-            return new Vector3(p.x, p.y + upOffset, p.z);
+            var ca = actionsOut.ContinuousActions;
+
+            float accelKey =
+                (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) ?  1f :
+                (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) ? -1f : 0f;
+
+            float steerKey =
+                (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))  ? -1f :
+                (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) ?  1f : 0f;
+
+            float accel = (Mathf.Abs(accelKey) > 0f) ? accelKey : Input.GetAxis("Vertical");
+            float steer = (Mathf.Abs(steerKey) > 0f) ? steerKey : Input.GetAxis("Horizontal");
+
+            const float dead = 0.05f;
+            if (Mathf.Abs(accel) < dead) accel = 0f;
+            if (Mathf.Abs(steer) < dead) steer = 0f;
+
+            ca[0] = Mathf.Clamp(accel, -1f, 1f);
+            ca[1] = Mathf.Clamp(steer, -1f, 1f);
         }
 
-#if (UNITY_EDITOR && VISUALIZE)
-        private void OnDrawGizmos()
+        private void SelectRandomGoalNode(Transform carTransform)
         {
-            if (!debug) return;
-            Gizmos.color = drawingColor;
-            Gizmos.DrawSphere(target, 1);
-            Gizmos.DrawLine(transform.position, target);
+            if (_goalNodeRenderer != null)
+            {
+                _goalNodeRenderer.material.color = _goalNodeOriginalColor;
+                _goalNodeRenderer = null;
+            }
+
+            var nodes = GameObject.FindGameObjectsWithTag("Parking Node");
+            if (nodes == null || nodes.Length == 0) return;
+
+            Transform chosenNode = null;
+            float dist;
+            int guard = 0;
+
+            do
+            {
+                chosenNode = nodes[UnityEngine.Random.Range(0, nodes.Length)].transform;
+                dist = Vector3.Distance(carTransform.position, chosenNode.position);
+                guard++;
+            }
+            while (dist < 2f && nodes.Length > 1 && guard < 50);
+
+            _goalNode = chosenNode;
+            if (_goalNode != null)
+            {
+                _goalNodeRenderer = _goalNode.GetComponentInChildren<Renderer>();
+                if (_goalNodeRenderer != null)
+                {
+                    _goalNodeOriginalColor = _goalNodeRenderer.material.color;
+                    _goalNodeRenderer.material.color = goalNodeColor;
+                }
+            }
         }
-#endif
+
+        private static bool SameNode(Transform a, Transform b)
+        {
+            if (a == null || b == null) return false;
+            return a == b || a.IsChildOf(b) || b.IsChildOf(a);
+        }
     }
 }

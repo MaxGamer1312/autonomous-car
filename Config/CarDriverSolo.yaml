@@ -1,5 +1,5 @@
 behaviors:
-  CarDriver:                      # must match your Behavior Name
+  ecar:  
     trainer_type: ppo
     max_steps: 50000000
     time_horizon: 128
