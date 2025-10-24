@@ -4,7 +4,7 @@ Spyder Editor
 
 Class to control raspberry pi car.
 """
-import pigpio
+import pigpio;
 SERVO_CENTER=1500
 
 class CarController:
