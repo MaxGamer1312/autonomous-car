@@ -131,20 +131,20 @@ namespace Tommy.Scripts.Training
                     // dist and angle are based on the car's position relative to the node
 
 
-                    // check if the 3rd node that we are looking at is a stop sign
-                    if (node.CompareTag("Stop Node") && nodeIdx == nodes.length -1)
+                    // check if stop sign is upcoming
+
+                    if (node.CompareTag("Stop Node"))
                     {
                         float speedThreshold = 0.5f;
-                        float stoppedTime = 0f;
                         // Small penalty per frame if going too fast
                         if (car.forwardSpeed > speedThreshold)
                         {
                             Debug.Log("Approaching stop sign...");
-                            AddReward(-0.01f); // stepwise penalty
-                            stoppedTime = 0f;  // reset stop timer
+                            AddReward(-0.01f * car.forwardSpeed); // stepwise penalty
+                            float stoppedTime = 0f;  // reset stop timer
                         }
                         else
-                        {
+                        { // TODO - find how to make the time go across frames - we need it to start at when the car stops at the stop sign and stop when it's been X seconds (2 seconds)
                             Debug.Log("STOPPED");
                             // Reward for staying stopped at the node
                             stoppedTime += Time.fixedDeltaTime;
@@ -154,7 +154,7 @@ namespace Tommy.Scripts.Training
                         // Bonus for fully stopping for N seconds
                         if (stoppedTime >= 2f) // 2 seconds
                         {
-                            AddReward(0.2f); // give a decent reward for stopping correctly
+                            AddReward(-0.1f); // give a decent reward for stopping correctly
                             stoppedTime = 0f; // reset for next stop node
                         }
                     }
