@@ -8,6 +8,9 @@ TagManager:
   - Death
   - Car
   - Ground
+  - Parking
+  - Parking Node
+  - Stop Node
   layers:
   - Default
   - TransparentFX
@@ -18,9 +21,9 @@ TagManager:
   - Ground
   - Road
   - Car
-  - 
-  - 
-  - 
+  - LaneNode
+  - Decur
+  - BFS Line
   - 
   - 
   - 
