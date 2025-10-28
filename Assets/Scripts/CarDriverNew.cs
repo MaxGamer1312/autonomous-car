@@ -108,8 +108,10 @@ namespace Tommy.Scripts.Training
                 Vector3 fwd = transform.forward; fwd.y = 0f;
                 if (fwd.sqrMagnitude > 1e-6f) fwd.Normalize();
 
+                int nodeIdx = 0;
                 foreach (var node in nodes)
                 {
+
                     if (node == null) continue;
                     Vector3 to = node.position - transform.position;
                     to.y = 0f; // only going on the horizontal plane
@@ -128,21 +130,25 @@ namespace Tommy.Scripts.Training
                     sensor.AddObservation(dist);
                     // dist and angle are based on the car's position relative to the node
 
-                    if (node.CompareTag("Stop Node"))
+
+                    // check if the 3rd node that we are looking at is a stop sign
+                    if (node.CompareTag("Stop Node") && nodeIdx == nodes.length -1)
                     {
                         float speedThreshold = 0.5f;
-
+                        float stoppedTime = 0f;
                         // Small penalty per frame if going too fast
                         if (car.forwardSpeed > speedThreshold)
                         {
+                            Debug.Log("Approaching stop sign...");
                             AddReward(-0.01f); // stepwise penalty
                             stoppedTime = 0f;  // reset stop timer
                         }
                         else
                         {
+                            Debug.Log("STOPPED");
                             // Reward for staying stopped at the node
                             stoppedTime += Time.fixedDeltaTime;
-                            AddReward(0.01f * Time.fixedDeltaTime); 
+                            AddReward(0.01f * Time.fixedDeltaTime);
                         }
 
                         // Bonus for fully stopping for N seconds
@@ -154,6 +160,7 @@ namespace Tommy.Scripts.Training
                     }
                     emitted++;
                     if (emitted >= lookaheadNodes) break;
+                    nodeIdx++;
                 }
             }
 
