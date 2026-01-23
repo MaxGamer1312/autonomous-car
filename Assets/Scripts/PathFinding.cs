@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using System.Collections.Generic;
+using UnityEngine;
+
 public class PathFinding : MonoBehaviour
 {
     [Header("Visuals")]
@@ -23,16 +26,16 @@ public class PathFinding : MonoBehaviour
     private Transform car;
     private Transform goal;
     private Transform _goalNode;
-    private Transform _anchorNode;      // last correct node (start node at episode start)
-    private Transform _lastStartNode;   // node the car spawned on / closest at compute time
-    private LineRenderer pathLine;
-    private int _currentNodeIndex = 0;  // index into currentPath for "next node"
-    private readonly HashSet<Transform> _visited = new HashSet<Transform>();
+    private Transform _anchorNode;      // last correct node (start node at episode start)
+    private Transform _lastStartNode;   // node the car spawned on / closest at compute time
+    private LineRenderer pathLine;
+    private int _currentNodeIndex = 0;  // index into currentPath for "next node"
+    private readonly HashSet<Transform> _visited = new HashSet<Transform>();
 
     private void Awake()
     {
-        // Ensure a dedicated child GO for the line so we don't change the layer of this whole object
-        Transform child = transform.Find(LineChildName);
+        // Ensure a dedicated child GO for the line so we don't change the layer of this whole object
+        Transform child = transform.Find(LineChildName);
         GameObject lineGO;
         if (child == null)
         {
@@ -44,8 +47,8 @@ public class PathFinding : MonoBehaviour
             lineGO = child.gameObject;
         }
 
-        // Assign layer
-        int bfsLayer = LayerMask.NameToLayer(LineLayerName);
+        // Assign layer
+        int bfsLayer = LayerMask.NameToLayer(LineLayerName);
         if (bfsLayer == -1)
         {
             Debug.LogWarning($"[PathFinding] Layer '{LineLayerName}' not found. Create it in Project Settings > Tags and Layers.");
@@ -55,8 +58,8 @@ public class PathFinding : MonoBehaviour
             lineGO.layer = bfsLayer;
         }
 
-        // Get or add LineRenderer on the child
-        pathLine = lineGO.GetComponent<LineRenderer>();
+        // Get or add LineRenderer on the child
+        pathLine = lineGO.GetComponent<LineRenderer>();
         if (pathLine == null) pathLine = lineGO.AddComponent<LineRenderer>();
 
         pathLine.useWorldSpace = true;
@@ -68,8 +71,8 @@ public class PathFinding : MonoBehaviour
         pathLine.enabled = false;
     }
 
-    /// Called each step by CarDriverNew to keep refs and redraw (no recompute here).
-    public void UpdatePath(Transform carTransform, Transform goalTransform)
+    /// Called each step by CarDriverNew to keep refs and redraw (no recompute here).
+    public void UpdatePath(Transform carTransform, Transform goalTransform)
     {
         car = carTransform;
         goal = goalTransform;
@@ -102,8 +105,8 @@ public class PathFinding : MonoBehaviour
         _visited.Clear();
     }
 
-    /// Used on episode start (or when you explicitly want a fresh path).
-    public void ForceRecomputeNow(Transform carT, Transform goalT)
+    /// Used on episode start (or when you explicitly want a fresh path).
+    public void ForceRecomputeNow(Transform carT, Transform goalT)
     {
         car = carT;
         goal = goalT;
@@ -171,7 +174,7 @@ public class PathFinding : MonoBehaviour
         if (startNode == null) return;
 
         _lastStartNode = startNode;
-        _anchorNode   = startNode;
+        _anchorNode = startNode;
 
         var cameFrom = new Dictionary<Transform, Transform>();
         var frontier = new Queue<Transform>();
@@ -197,8 +200,8 @@ public class PathFinding : MonoBehaviour
 
         if (!found || !cameFrom.ContainsKey(_goalNode)) return;
 
-        // Reconstruct
-        var node = _goalNode;
+        // Reconstruct
+        var node = _goalNode;
         while (node != null)
         {
             currentPath.Add(node);
@@ -206,18 +209,18 @@ public class PathFinding : MonoBehaviour
         }
         currentPath.Reverse();
 
-        // Do NOT include the car's starting node as a target (no reward there)
-        if (currentPath.Count > 0 && (currentPath[0] == _anchorNode || currentPath[0] == _lastStartNode))
+        // Do NOT include the car's starting node as a target (no reward there)
+        if (currentPath.Count > 0 && (currentPath[0] == _anchorNode || currentPath[0] == _lastStartNode))
             currentPath.RemoveAt(0);
 
-        // Remove nodes already visited so recomputes don’t turn them green again
-        if (_visited.Count > 0)
+        // Remove nodes already visited so recomputes don’t turn them green again
+        if (_visited.Count > 0)
             currentPath.RemoveAll(t => _visited.Contains(t));
 
         _currentNodeIndex = 0;
 
-        // color the remaining path nodes
-        foreach (Transform t in currentPath)
+        // color the remaining path nodes
+        foreach (Transform t in currentPath)
         {
             var r = t.GetComponentInChildren<Renderer>();
             if (r != null)
@@ -283,8 +286,8 @@ public class PathFinding : MonoBehaviour
         return currentPath[_currentNodeIndex];
     }
 
-    /// Return up to k upcoming nodes starting from the current "next".
-    public List<Transform> GetNextKNodes(int k)
+    /// Return up to k upcoming nodes starting from the current "next".
+    public List<Transform> GetNextKNodes(int k)
     {
         var res = new List<Transform>(k);
         if (currentPath == null || k <= 0) return res;
@@ -293,8 +296,8 @@ public class PathFinding : MonoBehaviour
         return res;
     }
 
-    /// Advance only when the right node is hit; also recompute fresh path from new anchor.
-    public void AdvanceIfNodeReached(Transform node)
+    /// Advance only when the right node is hit; also recompute fresh path from new anchor.
+    public void AdvanceIfNodeReached(Transform node)
     {
         if (currentPath == null || _currentNodeIndex >= currentPath.Count) return;
 
@@ -308,8 +311,8 @@ public class PathFinding : MonoBehaviour
         ComputeAndHighlightPath();
     }
 
-    /// Expose the current anchor (last correct node; start node at episode start)
-    public Transform GetAnchorNode() => _anchorNode != null ? _anchorNode : _lastStartNode;
+    /// Expose the current anchor (last correct node; start node at episode start)
+    public Transform GetAnchorNode() => _anchorNode != null ? _anchorNode : _lastStartNode;
 
     public bool IsEpisodeSpawnNode(Transform t) => t == _lastStartNode;
 }

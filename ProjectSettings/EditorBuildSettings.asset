@@ -20,8 +20,11 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/new/carTrain.unity
     guid: fbd02dc4ea54f41188f87945a77fc416
-  - enabled: 1
-    path: Assets/Scenes/new/simplePolyDemo.unity
+  - enabled: 0
+    path: Assets/Scenes/new/simplePolyDemo 1.unity
     guid: 5a6c6ca1203244a8bab7474f8e2d95fa
+  - enabled: 1
+    path: Assets/Scenes/new/simplePolyDemo 2.unity
+    guid: 5551368cdc1649845b854dc88455e10f
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

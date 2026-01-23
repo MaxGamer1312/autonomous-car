@@ -1,107 +1,128 @@
 using System.Collections.Generic;
+using Unity.MLAgents;
 using UnityEngine;
 
 namespace Tommy.Scripts.Training
 {
+    // Manages the starting location of the car and goal in each episode
     public class ParkingSpawner
     {
-        private readonly List<Transform> spots = new List<Transform>();
-        private readonly List<Renderer> goalNodes = new List<Renderer>();
-        private Color defaultColor = Color.white;
+        // List of locations where the car will spawn
+        private List<Transform> startingLocations = new List<Transform>();
+        // List of nodes where the goal will spawn
+        private List<Renderer> FinishNodes = new List<Renderer>();
+        // Default color to reset green nodes when episode ends
+        private Color defaultColor;
         private Renderer currentGoalRenderer = null;
+        private Transform _parent;
 
         public ParkingSpawner(Transform parent = null)
         {
-            Refresh(parent);
-            InitializeGoalNodes();
+            _parent = parent;
+            Refresh();
         }
 
-        public void Refresh(Transform parent = null)
-        {
-            spots.Clear();
-            if (parent != null)
+        // Clears and initializes startingLocations and FinishNodes
+        public void Refresh() {
+            startingLocations = new List<Transform>();
+            FinishNodes = new List<Renderer>();
+
+            if (_parent != null)
             {
-                for (int i = 0; i < parent.childCount; i++)
+                // Needed to localize locations for each individual map
+                foreach (Transform child in _parent.GetComponentsInChildren<Transform>(false))
                 {
-                    var t = parent.GetChild(i);
-                    if (t != null && t.CompareTag("Parking"))
-                        spots.Add(t);
+                    if (child == _parent)
+                    {
+                        continue;
+                    }
+
+                    if (child.CompareTag("Parking"))
+                    {
+                        startingLocations.Add(child);
+                    }
+
+                    else if (child.CompareTag("Parking Node"))
+                    {
+                        var rend = child.GetComponent<Renderer>();
+                        if (rend != null)
+                        {
+                            FinishNodes.Add(rend);
+                        }
+                    }
                 }
             }
             else
             {
-                foreach (var go in GameObject.FindGameObjectsWithTag("Parking"))
-                    spots.Add(go.transform);
-            }
-            InitializeGoalNodes();
-        }
-
-        private void InitializeGoalNodes()
-        {
-            goalNodes.Clear();
-            var nodes = GameObject.FindGameObjectsWithTag("Parking Node");
-            foreach (var node in nodes)
-            {
-                var rend = node.GetComponent<Renderer>();
-                if (rend != null)
+                foreach (var startingLocation in GameObject.FindGameObjectsWithTag("Parking"))
                 {
-                    goalNodes.Add(rend);
+                    startingLocations.Add(startingLocation.transform);
+                }
+
+                foreach (var finishNode in GameObject.FindGameObjectsWithTag("Parking Node"))
+                {
+                    var rend = finishNode.GetComponent<Renderer>();
+                    if (rend != null)
+                    {
+                        FinishNodes.Add(rend);
+                    }
                 }
             }
-            if (goalNodes.Count > 0)
+
+            if (FinishNodes.Count > 0)
             {
-                defaultColor = goalNodes[0].material.color;
+                defaultColor = FinishNodes[0].material.color;
             }
         }
 
-        public void SetRandomGoalNode()
-        {
-            if (goalNodes.Count == 0) return;
+        // Resets green nodes to old color and finds another random goal different from where the car is
+        public Transform GetRandomGoal(Transform playerTransform, float minDistance){
+            if (FinishNodes.Count == 0) {
+                return null;
+            }
 
-            // Reset previous goal node color
+            // Reset the old color (if we had one)
             if (currentGoalRenderer != null)
             {
                 currentGoalRenderer.material.color = defaultColor;
             }
 
-            int idx = Random.Range(0, goalNodes.Count);
-            currentGoalRenderer = goalNodes[idx];
-            currentGoalRenderer.material.color = Color.green;
-        }
-
-        public bool RandomLocation(Transform target, float surfaceYOffset = 0.1f, bool alignUpright = true)
-        {
-            if (spots.Count == 0 || target == null) return false;
-            int idx = Random.Range(0, spots.Count);
-            return PlaceAtSpot(spots[idx], target, surfaceYOffset, alignUpright);
-        }
-
-        public bool PlaceAtNearest(Transform target, float surfaceYOffset = 0.1f, bool alignUpright = true)
-        {
-            if (spots.Count == 0 || target == null) return false;
-
-            Transform best = spots[0];
-            float bestD = Vector3.SqrMagnitude(target.position - best.position);
-            for (int i = 1; i < spots.Count; i++)
+            // Pick a valid random finish node (checking distance)
+            Renderer chosenRenderer = null;
+            int guard = 0;
+            do
             {
-                float d = Vector3.SqrMagnitude(target.position - spots[i].position);
-                if (d < bestD)
-                {
-                    bestD = d;
-                    best = spots[i];
-                }
+                int idx = Random.Range(0, FinishNodes.Count);
+                chosenRenderer = FinishNodes[idx];
+                guard++;
             }
-            return PlaceAtSpot(best, target, surfaceYOffset, alignUpright);
+            // Keep picking if it's too close to the player
+            while (Vector3.Distance(playerTransform.position, chosenRenderer.transform.position) < minDistance && guard < 50);
+
+            // Highlight the new goal
+            currentGoalRenderer = chosenRenderer;
+            currentGoalRenderer.material.color = Color.green;
+
+            // Return the Transform so the Agent can use it
+            return currentGoalRenderer.transform;
         }
 
-        public bool PlaceAtSpot(Transform spot, Transform target, float surfaceYOffset = 0.02f, bool alignUpright = true)
-        {
-            if (spot == null || target == null) return false;
+        // Puts target in a random location from startingLocations
+        public bool RandomLocation(Transform target, float surfaceYOffset = 0.1f, bool alignUpright = true) {
+            if (startingLocations.Count == 0 || target == null) {
+                return false;
+            }
 
-            Vector3 pos = spot.position;
+            // Picks a random location from startingLocations
+            int idx = Random.Range(0, startingLocations.Count);
+            Transform chosenLocation = startingLocations[idx];
+            if (chosenLocation == null || target == null) {
+                return false;
+            }
+            Vector3 pos = chosenLocation.position;
 
             // Use collider bounds if available
-            var col = spot.GetComponent<Collider>();
+            var col = chosenLocation.GetComponent<Collider>();
             if (col != null)
             {
                 var b = col.bounds;
@@ -109,7 +130,7 @@ namespace Tommy.Scripts.Training
             }
             else
             {
-                var rend = spot.GetComponent<Renderer>();
+                var rend = chosenLocation.GetComponent<Renderer>();
                 if (rend != null)
                 {
                     var b = rend.bounds;
@@ -118,12 +139,11 @@ namespace Tommy.Scripts.Training
             }
 
             // Offset slightly upward to avoid intersection
-            pos += spot.up * surfaceYOffset;
+            pos += chosenLocation.up * surfaceYOffset;
 
             // Align with parking spot's forward direction
-            Vector3 flatForward = -spot.right;
+            Vector3 flatForward = -chosenLocation.right;
             flatForward.y = 0f;
-
             Quaternion rot = Quaternion.LookRotation(flatForward.normalized, Vector3.up);
 
             target.SetPositionAndRotation(pos, rot);

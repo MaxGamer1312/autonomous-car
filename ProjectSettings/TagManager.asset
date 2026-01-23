@@ -10,6 +10,7 @@ TagManager:
   - Ground
   - Parking
   - Parking Node
+  - Node
   layers:
   - Default
   - TransparentFX

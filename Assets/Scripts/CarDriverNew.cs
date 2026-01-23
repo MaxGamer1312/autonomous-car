@@ -5,6 +5,9 @@ using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
+using UnityEngine.UIElements;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Tommy.Scripts.Training
 {
@@ -47,6 +50,11 @@ namespace Tommy.Scripts.Training
 
         [SerializeField] private bool debug;
         [SerializeField] private bool debugRewards;
+        [SerializeField] public UnityEngine.Camera mycamera;
+        private GameObject[] allNodes;
+        // Add this inside your class variables
+        private bool waitingForRespawn = false;
+
 
         // Progressive shaping state (0..1). Reset each time a segment completes.
         private float _lastProgressFrac = 0f;
@@ -62,19 +70,114 @@ namespace Tommy.Scripts.Training
             pathFinder = GetComponent<PathFinding>();
             if (pathFinder == null)
                 pathFinder = gameObject.AddComponent<PathFinding>();
+            GameObject[] parkingNodes = GameObject.FindGameObjectsWithTag("Parking Node");
+            GameObject[] laneNodes = GameObject.FindGameObjectsWithTag("Node");
+            allNodes = parkingNodes.Concat(laneNodes).ToArray();
         }
 
+        public void Update()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                EndEpisode();
+                Respawn();
+                spawnGoal();
+            }
+        }
+
+        public void Respawn()
+        {
+            waitingForRespawn = false;
+            SetGhostMode(false);
+            pathFinder?.ResetPathState();
+            parkingSpawner.Refresh();
+            Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+            parkingSpawner.RandomLocation(transform, 0.5f, true);
+        }
+
+        private void SetGhostMode(bool isGhost)
+        {
+            // 1. Toggle Visuals (Renderer)
+            // If we have a renderer on this object:
+            var myRenderer = GetComponent<Renderer>();
+            if (myRenderer != null) myRenderer.enabled = !isGhost;
+
+            // If the visuals are in children (like a car model), use this instead:
+            foreach (var r in GetComponentsInChildren<Renderer>())
+                r.enabled = !isGhost;
+
+            // 2. Toggle Physics
+            var rb = GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.isKinematic = isGhost; // True = Physics Stops (Ghost). False = Physics Runs.
+                rb.detectCollisions = !isGhost; // Don't hit things while ghost
+            }
+        }
+
+        void spawnGoal()
+        {
+
+            // 1. Raycast to find what we clicked
+            Ray ray = mycamera.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                float min = float.MaxValue;
+                GameObject closestNode = null;
+
+                // 2. Find closest node to click
+                foreach (GameObject node in allNodes)
+                {
+                    Vector3 offset = node.transform.position - hit.point;
+                    float sqrLen = offset.sqrMagnitude;
+                    if (sqrLen < min)
+                    {
+                        min = sqrLen;
+                        closestNode = node;
+                    }
+                }
+
+                // 3. APPLY THE CHANGE CORRECTLY
+                if (closestNode != null)
+                {
+                    // A. Reset the color of the OLD goal node (if it exists)
+                    if (_goalNodeRenderer != null)
+                    {
+                        _goalNodeRenderer.material.color = _goalNodeOriginalColor;
+                    }
+
+                    // B. Set the NEW goal node
+                    _goalNode = closestNode.transform;
+                    target = _goalNode.position; // Optional, OnActionReceived will do this anyway
+
+                    // C. Set the color of the NEW goal node to Green
+                    _goalNodeRenderer = _goalNode.GetComponentInChildren<Renderer>();
+                    if (_goalNodeRenderer != null)
+                    {
+                        _goalNodeOriginalColor = _goalNodeRenderer.material.color;
+                        _goalNodeRenderer.material.color = goalNodeColor;
+                    }
+
+                    // D. Tell the Pathfinder the goal has changed immediately
+                    pathFinder?.ForceRecomputeNow(transform, _goalNode);
+
+                    Debug.Log($"Manually spawned goal at: {_goalNode.name}");
+                }
+            }
+        }
         public override void OnEpisodeBegin()
         {
             if (parkingSpawner == null) return;
 
             pathFinder?.ResetPathState();
 
-            parkingSpawner.Refresh();
-            parkingSpawner.RandomLocation(transform, 0.5f, true);
-
-            SelectRandomGoalNode(transform);
-            target = _goalNode != null ? _goalNode.position : transform.position;
 
             if (pathFinder != null && _goalNode != null)
                 pathFinder.ForceRecomputeNow(transform, _goalNode);
@@ -221,6 +324,8 @@ namespace Tommy.Scripts.Training
                 if (debugRewards) Debug.Log($"Reward: {deathPenalty} - reason: death");
                 pathFinder?.ResetPathState();
                 EndEpisode();
+                waitingForRespawn = true;
+                SetGhostMode(true);
                 return;
             }
 
@@ -243,6 +348,8 @@ namespace Tommy.Scripts.Training
                     if (debugRewards) Debug.Log($"Reward: {goalReward} - reason: goal node");
                     pathFinder?.ResetPathState();
                     EndEpisode();
+                    waitingForRespawn = true;
+                    SetGhostMode(true);
                     return;
                 }
 

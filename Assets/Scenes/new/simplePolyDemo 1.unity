@@ -1376,7 +1376,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4271027636383845234, guid: 8ed90d2906afc48adbed5fedfa8978c3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 17.640001
+      value: 17.640047
       objectReference: {fileID: 0}
     - target: {fileID: 4271027636383845234, guid: 8ed90d2906afc48adbed5fedfa8978c3, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1384,7 +1384,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4271027636383845234, guid: 8ed90d2906afc48adbed5fedfa8978c3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.9599996
+      value: 57.46
       objectReference: {fileID: 0}
     - target: {fileID: 4271027636383845234, guid: 8ed90d2906afc48adbed5fedfa8978c3, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1619,6 +1619,7 @@ MonoBehaviour:
   goalNodeColor: {r: 0, g: 1, b: 0, a: 1}
   debug: 0
   debugRewards: 0
+  mycamera: {fileID: 520919489}
 --- !u!114 &917359902
 MonoBehaviour:
   m_ObjectHideFlags: 0
