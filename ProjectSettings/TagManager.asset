@@ -11,6 +11,7 @@ TagManager:
   - Parking
   - Parking Node
   - Node
+  - Non Parking Node
   layers:
   - Default
   - TransparentFX
@@ -24,7 +25,7 @@ TagManager:
   - LaneNode
   - Decur
   - BFS Line
-  - 
+  - Obstacle
   - 
   - 
   - 

@@ -444,7 +444,7 @@ GameObject:
   - component: {fileID: 8990112783314617567}
   - component: {fileID: 7497060949515755090}
   - component: {fileID: 372827943483272460}
-  m_Layer: 7
+  m_Layer: 12
   m_Name: Sides (2)
   m_TagString: Death
   m_Icon: {fileID: 0}
@@ -552,7 +552,7 @@ GameObject:
   - component: {fileID: 4894914875337172396}
   - component: {fileID: 6382797491642224882}
   - component: {fileID: 8688566929187988781}
-  m_Layer: 7
+  m_Layer: 12
   m_Name: Sides
   m_TagString: Death
   m_Icon: {fileID: 0}
@@ -768,7 +768,7 @@ GameObject:
   - component: {fileID: 2314168262672466061}
   - component: {fileID: 807218700844436730}
   - component: {fileID: 7146572020283579043}
-  m_Layer: 7
+  m_Layer: 12
   m_Name: Sides (3)
   m_TagString: Death
   m_Icon: {fileID: 0}

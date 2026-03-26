@@ -11,11 +11,9 @@ namespace Tommy.Scripts.Training
         private List<Transform> startingLocations = new List<Transform>();
         // List of nodes where the goal will spawn
         private List<Renderer> FinishNodes = new List<Renderer>();
-        // Default color to reset green nodes when episode ends
-        private Color defaultColor;
         private Renderer currentGoalRenderer = null;
         private Transform _parent;
-
+        private static Dictionary<Transform, Transform> parkingSpots = new Dictionary<Transform, Transform>();
         public ParkingSpawner(Transform parent = null)
         {
             _parent = parent;
@@ -69,10 +67,6 @@ namespace Tommy.Scripts.Training
                 }
             }
 
-            if (FinishNodes.Count > 0)
-            {
-                defaultColor = FinishNodes[0].material.color;
-            }
         }
 
         // Resets green nodes to old color and finds another random goal different from where the car is
@@ -81,11 +75,6 @@ namespace Tommy.Scripts.Training
                 return null;
             }
 
-            // Reset the old color (if we had one)
-            if (currentGoalRenderer != null)
-            {
-                currentGoalRenderer.material.color = defaultColor;
-            }
 
             // Pick a valid random finish node (checking distance)
             Renderer chosenRenderer = null;
@@ -101,24 +90,66 @@ namespace Tommy.Scripts.Training
 
             // Highlight the new goal
             currentGoalRenderer = chosenRenderer;
-            currentGoalRenderer.material.color = Color.green;
+
 
             // Return the Transform so the Agent can use it
             return currentGoalRenderer.transform;
         }
 
         // Puts target in a random location from startingLocations
-        public bool RandomLocation(Transform target, float surfaceYOffset = 0.1f, bool alignUpright = true) {
-            if (startingLocations.Count == 0 || target == null) {
-                return false;
+        // Puts target in a random location from startingLocations
+        public Vector3 RandomLocation(Transform target, float surfaceYOffset = 0.1f, bool alignUpright = true)
+        {
+            if (startingLocations.Count == 0 || target == null)
+            {
+                return new Vector3(-1, -1, -1);
             }
 
             // Picks a random location from startingLocations
             int idx = Random.Range(0, startingLocations.Count);
             Transform chosenLocation = startingLocations[idx];
-            if (chosenLocation == null || target == null) {
-                return false;
+
+            bool spotIsTaken = true;
+            int guard = 0; // Guard against infinite loops crashing Unity
+
+            while (spotIsTaken && guard < 100)
+            {
+                guard++;
+
+                if (!parkingSpots.ContainsKey(chosenLocation))
+                {
+                    parkingSpots[chosenLocation] = target;
+                    spotIsTaken = false;
+                }
+                else
+                {
+                    Transform currentOwner = parkingSpots[chosenLocation];
+
+                    // If the previous owner is null, deactivated, or drove away, claim the spot
+                    if (currentOwner == null || !currentOwner.gameObject.activeInHierarchy || Vector3.Distance(chosenLocation.position, currentOwner.position) > 2f)
+                    {
+                        parkingSpots[chosenLocation] = target; // Directly overwrite the old owner
+                        spotIsTaken = false;
+                    }
+                    else if (currentOwner == target)
+                    {
+                        // Edge case: Target already owns this exact spot from a previous reset
+                        spotIsTaken = false;
+                    }
+                    else
+                    {
+                        // Spot is genuinely taken. Pick a new location.
+                        idx = Random.Range(0, startingLocations.Count);
+                        chosenLocation = startingLocations[idx];
+                    }
+                }
             }
+
+            if (spotIsTaken)
+            {
+                Debug.LogWarning($"[ParkingSpawner] Could not find an empty spot for {target.name} after 100 attempts! Overlapping to prevent freeze.");
+            }
+
             Vector3 pos = chosenLocation.position;
 
             // Use collider bounds if available
@@ -147,7 +178,8 @@ namespace Tommy.Scripts.Training
             Quaternion rot = Quaternion.LookRotation(flatForward.normalized, Vector3.up);
 
             target.SetPositionAndRotation(pos, rot);
-            return true;
+            Physics.SyncTransforms();
+            return pos;
         }
     }
 }

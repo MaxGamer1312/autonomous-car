@@ -17,6 +17,7 @@ public class PathFinding : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool debugLogs = false;
+    [SerializeField] private bool pathDrawing;
 
     private const string LineLayerName = "BFS Line";
     private const string LineChildName = "BFS_PathLine";
@@ -66,7 +67,10 @@ public class PathFinding : MonoBehaviour
         pathLine.startWidth = lineWidth;
         pathLine.endWidth = lineWidth;
         pathLine.material = new Material(Shader.Find("Unlit/Color"));
-        pathLine.material.color = pathColor;
+        if (pathDrawing)
+        {
+            pathLine.material.color = pathColor;
+        }
         pathLine.positionCount = 0;
         pathLine.enabled = false;
     }
@@ -160,7 +164,10 @@ public class PathFinding : MonoBehaviour
 
         if (car == null || goal == null) return;
 
-        var nodeGOs = GameObject.FindGameObjectsWithTag("Parking Node");
+        // Collect ALL navigable nodes — Parking Node, Node, and Non Parking Node are all
+        // valid graph vertices for routing. Non Parking Node just can't be a spawn/goal,
+        // but the car still needs to drive through them to reach other destinations.
+        var nodeGOs = GetAllGraphNodes();
         if (nodeGOs.Length == 0)
         {
             if (debugLogs) Debug.LogWarning("⚠️ No nodes found!");
@@ -220,16 +227,20 @@ public class PathFinding : MonoBehaviour
         _currentNodeIndex = 0;
 
         // color the remaining path nodes
-        foreach (Transform t in currentPath)
+        if (pathDrawing)
         {
-            var r = t.GetComponentInChildren<Renderer>();
-            if (r != null)
+            foreach (Transform t in currentPath)
             {
-                nodeRenderers[t] = r;
-                r.material.color = pathColor;
-            }
-        }
+                var r = t.GetComponentInChildren<Renderer>();
+                if (r != null)
+                {
+                    nodeRenderers[t] = r;
 
+                    r.material.color = pathColor;
+                }
+            }
+
+        }
         DrawPathLine();
     }
 
@@ -246,12 +257,30 @@ public class PathFinding : MonoBehaviour
         return best;
     }
 
-    private bool IsNode(Transform t) => t != null && t.CompareTag("Parking Node");
+    private static GameObject[] GetAllGraphNodes()
+    {
+        // All three tags are valid BFS graph vertices.
+        // "Non Parking Node" = can't spawn/goal there, but routing still passes through them.
+        var result = new List<GameObject>();
+        foreach (var go in GameObject.FindGameObjectsWithTag("Parking Node")) result.Add(go);
+        foreach (var go in GameObject.FindGameObjectsWithTag("Node")) result.Add(go);
+        foreach (var go in GameObject.FindGameObjectsWithTag("Non Parking Node")) result.Add(go);
+        return result.ToArray();
+    }
+
+    private bool IsNode(Transform t)
+    {
+        if (t == null) return false;
+        return t.CompareTag("Parking Node") || t.CompareTag("Node") || t.CompareTag("Non Parking Node");
+    }
 
     private void DrawPathLine()
     {
         if (pathLine == null) return;
-
+        if (!pathDrawing)
+        {
+            return;
+        }
         if (currentPath == null || currentPath.Count < 2)
         {
             pathLine.enabled = false;

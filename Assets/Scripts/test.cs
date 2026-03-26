@@ -1,10 +1,12 @@
 #define VISUALIZE
 
 using System;
+using System.Collections.Generic;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
+
 
 namespace Tommy.Scripts.Training
 {
@@ -31,16 +33,14 @@ namespace Tommy.Scripts.Training
         [SerializeField] private float stallSpeedThreshold = 0.1f;
         [SerializeField] private int stallTimeoutSteps = 100;
 
-        [Header("Visuals")]
-        [SerializeField] private Color pathColor = Color.green;
-        [SerializeField] private float lineHeight = 0.3f;
-        [SerializeField] private float lineWidth = 0.2f;
-
         [Header("Path Following")]
         [SerializeField] private bool bidirectional = false;
 
+
         [Header("Debug")]
         [SerializeField] private bool debug;
+
+        
 
         private PathFinding _pathManager;
         private int _stallCounter = 0;
@@ -56,7 +56,6 @@ namespace Tommy.Scripts.Training
 
         // Progressive shaping state (0..1). Reset each time a segment completes.
         private float _lastProgressFrac = 0f;
-
 
         public override void Initialize()
         {
@@ -236,7 +235,7 @@ namespace Tommy.Scripts.Training
         private void OnTriggerEnter(Collider other)
         {
             // Gets a penalty if it touches an object with a tag named "Death"
-            if (other.CompareTag("Death"))
+            if (other.CompareTag("Death") || other.CompareTag("Car"))
             {
                 AddReward(deathPenalty);
                 if (debug) {
@@ -253,7 +252,11 @@ namespace Tommy.Scripts.Training
                 // If the Agent hit the goal node
                 if (_goalNode != null && SameNode(other.transform, _goalNode))
                 {
+
                     // pay remaining shaping on the last node, then goal bonus
+
+
+             
                     var next = _pathManager?.GetNextNode();
                     var anchor = _pathManager?.GetAnchorNode();
                     if (next != null && anchor != null)

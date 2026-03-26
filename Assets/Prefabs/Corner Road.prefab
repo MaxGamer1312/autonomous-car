@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 1580500406495487577}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.01440382, y: 0, z: -0.12014393}
   m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -178,7 +178,7 @@ GameObject:
   - component: {fileID: 128461626433066840}
   - component: {fileID: 841184771938143311}
   - component: {fileID: 2541361036848909378}
-  m_Layer: 7
+  m_Layer: 12
   m_Name: Sides
   m_TagString: Death
   m_Icon: {fileID: 0}
@@ -286,7 +286,7 @@ GameObject:
   - component: {fileID: 3572546475429902304}
   - component: {fileID: 2369397904558601164}
   - component: {fileID: 2351377393194785540}
-  m_Layer: 7
+  m_Layer: 12
   m_Name: Sides (1)
   m_TagString: Death
   m_Icon: {fileID: 0}
@@ -394,7 +394,7 @@ GameObject:
   - component: {fileID: 3638791422757633566}
   - component: {fileID: 6109620298907355561}
   - component: {fileID: 7133405000948528194}
-  m_Layer: 7
+  m_Layer: 12
   m_Name: Sides (2)
   m_TagString: Death
   m_Icon: {fileID: 0}
